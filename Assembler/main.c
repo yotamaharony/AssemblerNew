@@ -3,6 +3,8 @@
 #include <string.h>
 #include <errno.h>
 
+/* just checking if the gitHub works fine */
+
 typedef struct {
 	char* opcode;
 	char* rd;
@@ -202,6 +204,7 @@ char registerName_to_number(char* name)
 	return "!";
 }
 
+/* this function can be removed */
 char* opcode_to_bin_CHAR(char* opcode)
 {
 	if (strcmp(opcode, "add") == 0) //0 = equal
@@ -242,6 +245,7 @@ char* opcode_to_bin_CHAR(char* opcode)
 	return "!";
 }
 
+/* this function can be removed */
 char* registerName_to_number_CHAR(char* name)
 {
 	if (strcmp(name, "$zero") == 0) //0 = equal
