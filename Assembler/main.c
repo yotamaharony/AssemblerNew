@@ -245,7 +245,7 @@ char* opcode_to_bin_CHAR(char* opcode)
 	return "!";
 }
 
-/* this function can be removed */
+/* this function can be  removed */
 char* registerName_to_number_CHAR(char* name)
 {
 	if (strcmp(name, "$zero") == 0) //0 = equal
