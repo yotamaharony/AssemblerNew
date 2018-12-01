@@ -35,7 +35,7 @@ void do_sll(Trace* R, int rd, int rs, int rt, int imm) {
 }
 
 /* sra operation */
-void do_sll(Trace* R, int rd, int rs, int rt, int imm) {
+void do_sra(Trace* R, int rd, int rs, int rt, int imm) {
 	R->regs[rd] = R->regs[rs] >> (R->regs[rt] + imm);
 }
 
@@ -108,11 +108,11 @@ void do_halt(Trace* R) {
 }
 
 
-
+/*
 int main(int argc, char** argv)
 {
 	Trace s;
 
 	return 0;
 }
-
+*/

@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
+#include "our_list.h"
 
 /* just checking if the gitHub works fine */
 
@@ -15,8 +16,10 @@ typedef struct {
 } Command;
 
 #define MAXCHARATLINE 500
+#define MEMORY_SIZE 512
 
 void readFile();
+List* get_labels_lines( char* filename);
 char opcode_to_bin(char* opcode);
 char registerName_to_number(char* name);
 
@@ -26,20 +29,22 @@ char* registerName_to_number_CHAR(char* name);
 
 int main(int argc, char** argv) 
 {
+	char* filename = "C:\\Users\\Yotam\\Documents\\fib.asm";
+	//get_labels_lines(labels, filename);
+	List* labels = get_labels_lines(filename);
+
+	printf("\n");
 	readFile();
 	return 0;
 }
 
-
-void readFile()
-{
+List* get_labels_lines( char* filename) {
 	FILE *fp;
-	char str[MAXCHARATLINE];
-	int j = 1;
-	char delimiters[] = " \t\r\n','";
-	char* filename = "C:\\Users\\Yotam\\Documents\\fib.asm";
+	char line[MAXCHARATLINE];
+	unsigned int j = 1;
+	char delimiters[] = " \t\r\n,";
 	int i;
-	int to_print = 1;
+	List* labels = initList();
 
 	fp = fopen(filename, "r");
 	if (fp == NULL) {
@@ -47,83 +52,104 @@ void readFile()
 		return 1;
 	}
 
-	Command* curr = malloc(sizeof(Command*));
-
-	while (fgets(str, MAXCHARATLINE, fp) != NULL)
+	while (fgets(line, MAXCHARATLINE, fp) != NULL)
 	{
-		
+		if (line[0] == '\n' || line[0] == '\r' || line[0] == '#') {
+			continue;
+		}
+
 		char* comm[256];
 		i = 0;
-		comm[i] = strtok(str, delimiters);
-
-		if (comm[0] != NULL && comm[0] != " " )
+		comm[i] = strtok(line, delimiters);
+		if (comm[0] != NULL)
 		{
-			
+			if (strchr(comm[0], ':'))
+			{
+				//labels[j] = comm[0];
+				addNode(labels, comm[0], j);
+			}
+
+			j++;
+		}
+	}
+
+	Node* temp = labels->head;
+	while (temp)
+	{
+		printf("%s:%d\n", temp->label_name, temp->line_number);
+		temp = temp->next;
+	}
+
+
+	fclose(fp);
+}
+
+void readFile()
+{
+	FILE *fp;
+	char line[MAXCHARATLINE];
+	int j = 1;
+	char delimiters[] = " \t\r\n,";
+	char* filename = "C:\\Users\\Yotam\\Documents\\fib.asm";
+	int i;
+	List* labels = get_labels_lines(filename);
+
+	fp = fopen(filename, "r");
+	if (fp == NULL) {
+		printf("Could not open file %s\n", filename);
+		return 1;
+	}
+
+	while (fgets(line, MAXCHARATLINE, fp) != NULL)
+	{
+		if (line[0] == '\n' || line[0] == '\r' || line[0] == '#') {
+			continue;
+		}
+
+		char* comm[256];
+		i = 0;
+		comm[i] = strtok(line, delimiters);
+		if (comm[0] != NULL)
+		{
+			if (strchr(comm[0], ':'))
+			{
+				comm[0] = strtok(NULL, delimiters);
+				//printf("switch: %s\n", comm[0]);
+				if (comm[0] == NULL)
+					continue;
+			}
+
 			while (comm[i] != NULL && i<6) {
 				i++;
 				comm[i] = strtok(NULL, delimiters);
-				
+			}
+			//printf("LINE#%d: opcde=%s, rd=%s, rs=%s, rt=%s, rm=%s, imm=%s\n", j, comm[0], comm[1], comm[2], comm[3], comm[4], comm[5]);
+
+			/* currently not working correctly */
+			int find = find_node(labels, comm[5]);
+			if (find != -1)
+				comm[5] = find;
+
+			if (!strchr(comm[0], '.'))
+				//printf("%c%c%c%c%c0000\n", opcode_to_bin(comm[0]), registerName_to_number(comm[1]), registerName_to_number(comm[2]), registerName_to_number(comm[3]), registerName_to_number(comm[4]));
+				printf("%c%c%c%c%c%04d\n", opcode_to_bin(comm[0]), registerName_to_number(comm[1]), registerName_to_number(comm[2]), registerName_to_number(comm[3]), registerName_to_number(comm[4]), atoi(comm[5]));
+			else
+			{
+				/* do .word*/
 			}
 
-			curr->opcode = comm[0];
-			curr->rd = comm[1];
-			curr->rs = comm[2];
-			curr->rt = comm[3];
-			curr->rm = comm[4];
-			curr->imm = comm[5];
-
-			
-			if (strchr(comm[0], ':'))
-			{
-				if (comm[1] != NULL)
-				{
-					if (opcode_to_bin(comm[1]) != '!')
-					//if (strcmp("!", opcode_to_bin(comm[1])))
-					{
-						curr->opcode = comm[1];
-						curr->rd = comm[2];
-						curr->rs = comm[3];
-						curr->rt = comm[4];
-						curr->rm = comm[5];
-						curr->imm = comm[6];
-					}
-					//printf("problem fixed\n");
-				}
-				else
-				{
-					to_print = 0;
-					j--;
-				}		
-			}
-			
-			if (to_print)
-			{
-				//printf("LINE#%d: opcde=%s, rd=%s, rs=%s, rt=%s, rm=%s, imm=%s\n", j, curr->opcode, curr->rd, curr->rs, curr->rt, curr->rm, curr->imm);
-				//char* num = ;
-				/*
-				printf("opcode: %s->%c\n", curr->opcode, opcode_to_bin(curr->opcode));
-				printf("rd: %s->%c\n", curr->rd, registerName_to_number(curr->rd));
-				printf("rs: %s->%c\n", curr->rs, registerName_to_number(curr->rs));
-				printf("rt: %s->%c\n", curr->rt, registerName_to_number(curr->rt));
-				printf("rm: %s->%c\n", curr->rm, registerName_to_number(curr->rm));
-				
-				printf("\n");
-				*/
-				printf("%c%c%c%c%c0000\n", opcode_to_bin(curr->opcode), registerName_to_number(curr->rd), registerName_to_number(curr->rs), registerName_to_number(curr->rt), registerName_to_number(curr->rm));
-			}
-			
-			//printf("LINE#%d: opcde=%s, rd=%s, rs=%s, rt=%s, rm=%s, imm=%s\n", j, curr->opcode, curr->rd, curr->rs, curr->rt, curr->rm, curr->imm);
-			
-			
-			
-			
 			j++;
-			to_print = 1;
 		}
-		
+		else
+			continue;
+
 	}
+
+
+	scanf("%d", &i);
 	fclose(fp);
 }
+
 
 char opcode_to_bin(char* opcode)
 {   
