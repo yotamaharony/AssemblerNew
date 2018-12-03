@@ -4,42 +4,36 @@
 #include <errno.h>
 #include "our_list.h"
 
-/* just checking if the gitHub works fine */
-
-typedef struct {
-	char* opcode;
-	char* rd;
-	char* rs;
-	char* rt;
-	char* rm;
-	char* imm;
-} Command;
-
 #define MAXCHARATLINE 500
 #define MEMORY_SIZE 512
 
 void readFile();
-List* get_labels_lines( char* filename);
+List* get_labels_lines(char* filename, int* max_line);
 char opcode_to_bin(char* opcode);
 char registerName_to_number(char* name);
-int imm_to_hex(char* imm);
 void label_to_hex(char* str, int imm);
+void write_to_file(char* path, char** arr, int arr_size);
+
+void copy_string(char *target, char *source) {
+	while (*source) {
+		*target = *source;
+		source++;
+		target++;
+	}
+	*target = '\0';
+}
 
 int main(int argc, char** argv) 
 {
 	char* filename = "C:\\Users\\Yotam\\Documents\\fib.asm";
-	//get_labels_lines(labels, filename);
-	//List* labels = get_labels_lines(filename);
-
-	//printf("\n");
 	readFile();
 	return 0;
 }
 
-List* get_labels_lines( char* filename) {
+List* get_labels_lines(char* filename, int* max_line) {
 	FILE *fp;
 	char line[MAXCHARATLINE];
-	unsigned int j = 1;
+	unsigned int j = 0;
 	char delimiters[] = " \t\r\n,";
 	int i;
 	List* labels = initList();
@@ -63,8 +57,14 @@ List* get_labels_lines( char* filename) {
 		{
 			if (strchr(comm[0], ':'))
 			{
-				//labels[j] = comm[0];
-				addNode(labels, comm[0], j-1);
+				addNode(labels, comm[0], j);
+			}
+
+			if (strstr(comm[0], ".word"))
+			{
+				comm[1] = strtok(NULL, delimiters);
+				if (atoi(comm[1]) > (*max_line))
+					(*max_line) = atoi(comm[1]);
 			}
 
 			j++;
@@ -79,6 +79,7 @@ List* get_labels_lines( char* filename) {
 		temp = temp->next;
 	}
 	*/
+	//printf("Max line is: %d\n", *max_line);
 	fclose(fp);
 	return labels;
 }
@@ -87,14 +88,20 @@ void readFile()
 {
 	FILE *fp;
 	char line[MAXCHARATLINE];
-	int j = 1;
+	int i, j = 0, address, data, max_line = 0;
 	char delimiters[] = " \t\r\n,";
 	char* filename = "C:\\Users\\Yotam\\Documents\\fib.asm";
-	int i;
 	char opcode, rd, rs, rm, rt;
-	//char imm[3];
 	char str[3] = "000";
-	List* labels = get_labels_lines(filename);
+	List* labels = get_labels_lines(filename, &max_line);
+	char** memin = (char**)malloc(max_line * sizeof(char*));
+
+	/* initalizing the memin array to zeros */
+	for (int k = 0; k < max_line; k++)
+	{
+		memin[k] = (char*)malloc((sizeof(char) * 9));
+		memcpy(memin[k], "00000000\0", 9);
+	}
 
 	fp = fopen(filename, "r");
 	if (fp == NULL) {
@@ -116,7 +123,6 @@ void readFile()
 			if (strchr(comm[0], ':'))
 			{
 				comm[0] = strtok(NULL, delimiters);
-				//printf("switch: %s\n", comm[0]);
 				if (comm[0] == NULL)
 					continue;
 			}
@@ -125,22 +131,17 @@ void readFile()
 				i++;
 				comm[i] = strtok(NULL, delimiters);
 			}
-			//printf("LINE#%d: opcde=%s, rd=%s, rs=%s, rt=%s, rm=%s, imm=%s\n", j, comm[0], comm[1], comm[2], comm[3], comm[4], comm[5]);
 
-			/* currently not working correctly */
 			int find = find_node(labels, comm[5]);
 			if (find != -1)
 			{
 				label_to_hex(str, find);
-				//printf("new try: %04x\n", find);
-				//printf("%s: %d %s ", comm[5], find, str);
 				comm[5] = str;
 			}
 			else
 			{// convert the imm to hex
 				itoa(atoi(comm[5]), str, 16);
 				comm[5] = str;
-				//label_to_hex(str, atoi(comm[5]));
 			}
 
 			
@@ -154,21 +155,45 @@ void readFile()
 				rt = registerName_to_number(comm[3]);
 				rm = registerName_to_number(comm[4]);
 				//imm = comm[5];
+
+				char curr[9] = "00000000";
+				char curr_instruction[9] = "00000000";
 				
 				int imm_size = strlen(comm[5]);
 				if (imm_size == 1)
+				{
 					printf("%c%c%c%c%c00%s\n", opcode, rd, rs, rt, rm, strupr(comm[5]));
+					sprintf(curr_instruction,"%c%c%c%c%c00%s", opcode, rd, rs, rt, rm, strupr(comm[5]));
+				}
 				else if (imm_size == 2)
+				{
 					printf("%c%c%c%c%c0%s\n", opcode, rd, rs, rt, rm, strupr(comm[5]));
+					sprintf(curr_instruction,"%c%c%c%c%c0%s", opcode, rd, rs, rt, rm, strupr(comm[5]));
+				}
 				else
+				{
 					printf("%c%c%c%c%c%s\n", opcode, rd, rs, rt, rm, strupr(comm[5]));
+					sprintf(curr_instruction,"%c%c%c%c%c%s", opcode, rd, rs, rt, rm, strupr(comm[5]));
+				}
 				
+				//printf("curr is: %s\n", curr_instruction);
 				//printf("%c%c%c%c%c0000\n", opcode_to_bin(comm[0]), registerName_to_number(comm[1]), registerName_to_number(comm[2]), registerName_to_number(comm[3]), registerName_to_number(comm[4]));
 				//printf("%c%c%c%c%c%04d\n", opcode_to_bin(comm[0]), registerName_to_number(comm[1]), registerName_to_number(comm[2]), registerName_to_number(comm[3]), registerName_to_number(comm[4]), atoi(comm[5]));
+				//memin[j] = curr;
+
+				copy_string(memin[j], curr_instruction);
+				//strcpy(memin[j], curr_instruction);
+				//memcpy(memin[j], curr_instruction, 9);
+				
 			}
 			else
 			{
 				/* do .word*/
+				address = atoi(comm[1]);
+				data = atoi(comm[2]);
+
+				printf("Address is=%d, Data is=%d, Try:%.8X\n", address, data, -1);
+				sprintf(memin[address-1], "%.8X", data);
 			}
 
 			j++;
@@ -178,16 +203,18 @@ void readFile()
 
 	}
 
-
-	scanf("%d", &i);
-	fclose(fp);
-}
-
-int imm_to_hex(char* imm) {
-	if (strstr(imm, "0x") != NULL) { // Num is in hexadecimal
-		return (int)strtol(imm, NULL, 0);
+	
+	printf("\n\nARRAY:\n\n");
+	for (int k=0; k < max_line; k++)
+	{
+		printf("LINE #%d: %s\n",k, memin[k]);
 	}
-	return strtol(imm, NULL, 10);
+	
+
+	write_to_file("", memin, max_line);
+	scanf("%d", &i);
+	/* need to free the memory */
+	fclose(fp);
 }
 
 void label_to_hex(char* str, int imm) {
@@ -198,6 +225,18 @@ void label_to_hex(char* str, int imm) {
 		strcat(str, "00");
 	else if (strlen == 2)
 		str = strcat("0", str);
+}
+
+void write_to_file(char* path, char** memin, int memin_len) {
+	FILE *fp;
+	//fp = fopen(path, "w");
+	fp = fopen("C:\\Users\\Yotam\\Documents\\memout.txt", "w");
+
+	for (int i = 0; i < memin_len; i++) {
+		fprintf(fp, "%s\n", memin[i]);
+	}
+
+	fclose(fp);
 }
 
 char opcode_to_bin(char* opcode)
