@@ -15,21 +15,21 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="main.h">
+    <ClInclude Include="our_list.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="our_list.h">
+    <ClInclude Include="assembler.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="main.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Simulator.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="our_list.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="assembler.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
