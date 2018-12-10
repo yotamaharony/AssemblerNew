@@ -18,7 +18,7 @@ void copy_string(char *target, char *source) {
 int main(int argc, char** argv) 
 {
 	char* input = "C:\\Users\\Yotam\\Documents\\binom.asm";
-	char* output = "C:\\Users\\Yotam\\Documents\\memout.txt";
+	char* output = "C:\\Users\\Yotam\\Documents\\memin.txt";
 
 	/*
 	if (argc != 3)
@@ -68,6 +68,9 @@ List* get_labels_lines(char* filename, int* max_line) {
 			if (strchr(comm[0], ':')) /* check whether it's a label (contains : )*/
 			{
 				addNode(labels, comm[0], j);
+				comm[1] = strtok(NULL, delimiters);
+				if (comm[1] == NULL)
+					continue;
 			}
 
 			if (strstr(comm[0], ".word")) /* check whether it's a .word command */
