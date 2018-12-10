@@ -1,6 +1,11 @@
 ﻿#include "assembler.h"
 
-
+/*
+* This function copies the source string into the target string
+* @param target - a pointer to the target char
+* @param source - a pointer to the source char
+* @return - void
+*/
 void copy_string(char *target, char *source) {
 	while (*source) {
 		*target = *source;
@@ -12,9 +17,10 @@ void copy_string(char *target, char *source) {
 
 int main(int argc, char** argv) 
 {
-	//char* input = "C:\\Users\\Yotam\\Documents\\fib.asm";
-	//char* output = "C:\\Users\\Yotam\\Documents\\memout2.txt";
+	char* input = "C:\\Users\\Yotam\\Documents\\binom.asm";
+	char* output = "C:\\Users\\Yotam\\Documents\\memout.txt";
 
+	/*
 	if (argc != 3)
 	{
 		printf("Error: invalid number of arguments\n");
@@ -22,7 +28,7 @@ int main(int argc, char** argv)
 
 	const char* input = argv[1];
 	const char* output = argv[2];
-
+	*/
 	readFile(input, output);
 	return 0;
 }
@@ -35,15 +41,17 @@ List* get_labels_lines(char* filename, int* max_line) {
 	int word_address;
 	List* labels = initList();
 
+	/* trying to open the file */
 	fp = fopen(filename, "r");
 	if (fp == NULL) {
 		printf("Could not open file %s\n", filename);
 		return 1;
 	}
 
+	/* goes over the file line by line */
 	while (fgets(line, MAXCHARATLINE, fp) != NULL)
 	{
-		//replace_char(line, '#', '\0');
+		/* if it's not a command - skip it */
 		if (line[0] == '\n' || line[0] == '\r' || line[0] == '#') {
 			continue;
 		}
@@ -52,23 +60,24 @@ List* get_labels_lines(char* filename, int* max_line) {
 		comm[0] = strtok(line, delimiters);
 		if (comm[0] != NULL)
 		{
-			if (strchr(comm[0], ':'))
+			if (strchr(comm[0], '#')) /* skip a comment line */
+			{
+				continue;
+			}
+
+			if (strchr(comm[0], ':')) /* check whether it's a label (contains : )*/
 			{
 				addNode(labels, comm[0], j);
 			}
 
-			if (strstr(comm[0], ".word"))
+			if (strstr(comm[0], ".word")) /* check whether it's a .word command */
 			{
 				comm[1] = strtok(NULL, delimiters);
-				if (strstr(comm[1], "0x") || strstr(comm[1], "0X"))
-				{
-					word_address = (int)strtol(comm[1], NULL, 16);
-				}
-				else
-				{
-					word_address = (int)strtol(comm[1], NULL, 10);
-				}
-				if (word_address + 1 > (*max_line))
+
+				/* translate the address from hexa to decimal */
+				word_address = imm_to_int(comm[1]);
+
+				if (word_address + 1 > (*max_line)) /* max_line = max(max_line, address of current of .word) */
 					(*max_line) = word_address + 1;
 			}
 
@@ -76,8 +85,9 @@ List* get_labels_lines(char* filename, int* max_line) {
 		}
 	}
 
-	j--;
+	//j--;
 
+	/* max_line = max(number of commands, biggest address of .word */
 	if (j > (*max_line))
 	{
 		(*max_line) = j;
@@ -116,6 +126,7 @@ void readFile(char* input, char* output)
 	while (fgets(line, MAXCHARATLINE, fp) != NULL)
 	{
 		/* if it's not a command - skip it */
+		//printf("line[0]=%c\n", line[0]);
 		if (line[0] == '\n' || line[0] == '\r' || line[0] == '#') {
 			continue;
 		}
@@ -127,6 +138,11 @@ void readFile(char* input, char* output)
 		/* divide the command into blocks */
 		if (comm[0] != NULL)
 		{
+			if (strchr(comm[0], '#')) /* skip a comment line */
+			{
+				continue;
+			}
+
 			if (strchr(comm[0], ':')) /* if it's a LABEL and empty line after it - skip it*/
 			{
 				comm[0] = strtok(NULL, delimiters);
@@ -142,19 +158,16 @@ void readFile(char* input, char* output)
 
 			/* check if the imm block it's a label - if it is, convert the label to the line in the code*/
 			int find = find_node(labels, comm[5]);
-			char str[] = "000";
-			if (find != -1)
+			int c5 = 0;
+			if (find == -1) /* label was not found */
 			{
-				label_to_hex(str, find); /* add leading zeros if needed */
-				comm[5] = str;
+				c5 = imm_to_int(comm[5]);
 			}
 			else
-			{// convert the imm to hex
-				itoa(atoi(comm[5]), str, 16); /* convert the imm to hexa */
-				comm[5] = str;
+			{
+				c5 = find;
 			}
 
-			
 			/* if the command is not ".word"*/
 			if (!strchr(comm[0], '.'))
 			{
@@ -166,51 +179,16 @@ void readFile(char* input, char* output)
 				rm = registerName_to_number(comm[4]);
 				//imm = comm[5];
 
-				char curr[9] = "00000000";
 				char curr_instruction[9] = "00000000";
 				
-				/* a bad way to add leading zeros */
-				int imm_size = strlen(comm[5]);
-				if (imm_size == 1)
-				{
-					//printf("%c%c%c%c%c00%s\n", opcode, rd, rs, rt, rm, strupr(comm[5]));
-					sprintf(curr_instruction,"%c%c%c%c%c00%s", opcode, rd, rs, rt, rm, strupr(comm[5]));
-				}
-				else if (imm_size == 2)
-				{
-					//printf("%c%c%c%c%c0%s\n", opcode, rd, rs, rt, rm, strupr(comm[5]));
-					sprintf(curr_instruction,"%c%c%c%c%c0%s", opcode, rd, rs, rt, rm, strupr(comm[5]));
-				}
-				else
-				{
-					//printf("%c%c%c%c%c%s\n", opcode, rd, rs, rt, rm, strupr(comm[5]));
-					sprintf(curr_instruction,"%c%c%c%c%c%s", opcode, rd, rs, rt, rm, strupr(comm[5]));
-				}
-
+				sprintf(curr_instruction, "%c%c%c%c%c%.3X", opcode, rd, rs, rt, rm, c5);
 				copy_string(memin[j], curr_instruction);
 			}
 			else 
 			{ /* the command is .word*/
-				/* if hexa - convert to hexa */
-				if (strstr(comm[1], "0x") || strstr(comm[1], "0X"))
-				{
-					address = (int)strtol(comm[1], NULL, 16);
-				}
-				else
-				{
-					address = (int)strtol(comm[1], NULL, 10);
-				}
-
-				if (strstr(comm[2], "0x") || strstr(comm[2], "0X"))
-				{
-					data = (int)strtol(comm[2], NULL, 16);
-				}
-				else
-				{
-					data = (int)strtol(comm[2], NULL, 10);
-				}
-
-				//printf("Address is=%d, Data is=%d, Try:%.8X\n", address, data, -1);
+				/* if hexa - convert to dec */
+				address = imm_to_int(comm[1]);
+				data = imm_to_int(comm[2]);
 				sprintf(memin[address], "%.8X", data);
 			}
 
@@ -221,38 +199,21 @@ void readFile(char* input, char* output)
 
 	}
 
-	/*
-	printf("\n\nARRAY:\n\n");
-	for (int k=0; k < max_line; k++)
-	{
-		printf("LINE #%d: %s\n",k, memin[k]);
-	}
-	*/
-
 	write_to_file(output, memin, max_line);
 	//scanf("%d", &i);
 	/* need to free the memory */
 	fclose(fp);
 }
 
-void label_to_hex(char* str, int imm) {
-	/*
-	itoa(imm, str, 16);
-	int size = strlen(itoa);
-	if (strlen == 1)
-		//str = strcat("00", str);
-		strcat(str, "00");
-	else if (strlen == 2)
-		str = strcat("0", str);
-		*/
-
-	itoa(imm, str, 16);
-	int size = strlen(itoa);
-	if (strlen == 1)
-		str = strcat("00", str);
-		//strcat(str, "00");
-	else if (strlen == 2)
-		str = strcat("0", str);
+int imm_to_int(char* str) {
+	if (strstr(str, "0x") || strstr(str, "0X"))
+	{
+		return (int)strtol(str, NULL, 16);
+	}
+	else
+	{
+		return (int)strtol(str, NULL, 10);
+	}
 }
 
 void write_to_file(char* filename, char** memin, int memin_len) {

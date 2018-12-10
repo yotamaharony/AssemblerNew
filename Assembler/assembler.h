@@ -8,11 +8,24 @@
 #include "our_list.h"
 
 #define MAXCHARATLINE 500 // The maximum length of a line in the assembly code
-#define MEMORY_SIZE 512   //
 
+/*
+* This function goes over the input file line by line and translate the assembler command into hexa string.
+* it writes it into an array and at the end will write it to the output file
+* It uses get_labels_lines and write_to_file.
+* @param filename - the path of the input file
+* @param filename - the path of the output file
+* @return - void
+*/
+void readFile(char* filename, char* output);
 
-void readFile(char* filename);
-
+/*
+* This function goes over the input file line by line and create a List of labels and their line number.
+* It also return the max line - max(number of commands, address of .word)
+* @param filename - the path of the input file
+* @param max_line - a pointer to the integer which keeps the max_line
+* @return List* - the list of the labels and their line number
+*/
 List* get_labels_lines(char* filename, int* max_line);
 
 /*
@@ -29,7 +42,12 @@ char opcode_to_bin(char* opcode);
 */
 char registerName_to_number(char* name);
 
-void label_to_hex(char* str, int imm);
+
+/* translate the imm string into int (take care of hexa and dec)
+* @param str - the imm string
+* @return int - the imm as int
+*/
+int imm_to_int(char* str);
 
 /*
 * This function gets a file path and array of strings (and its size), and print line by line the array into the file
@@ -40,6 +58,9 @@ void label_to_hex(char* str, int imm);
 */
 void write_to_file(char* path, char** arr, int arr_size);
 
+/*
+* This main function which runs the assembler program
+*/
 int main(int argc, char** argv);
 
 
