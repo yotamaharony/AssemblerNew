@@ -17,18 +17,20 @@ void copy_string(char *target, char *source) {
 
 int main(int argc, char** argv) 
 {
-	char* input = "C:\\Users\\Yotam\\Documents\\binom.asm";
-	char* output = "C:\\Users\\Yotam\\Documents\\memin.txt";
-
-	/*
+	//char* input = "C:\\Users\\Yotam\\Documents\\binom2.asm";
+	//char* output = "C:\\Users\\Yotam\\Documents\\meminbinom2.txt";
+	//"C:\\Users\\Yotam\\Documents\\binom2.asm" "C:\\Users\\Yotam\\Documents\\meminbinom2.txt"
+	
+	
 	if (argc != 3)
 	{
 		printf("Error: invalid number of arguments\n");
 	}
+	
 
 	const char* input = argv[1];
 	const char* output = argv[2];
-	*/
+	
 	readFile(input, output);
 	return 0;
 }

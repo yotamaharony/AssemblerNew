@@ -93,6 +93,9 @@
     <Link>
       <SubSystem>Console</SubSystem>
     </Link>
+    <PreBuildEvent>
+      <Command>"C:\\Users\\Yotam\\Documents\\binom2.asm" "C:\\Users\\Yotam\\Documents\\meminbinom2.txt"</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
