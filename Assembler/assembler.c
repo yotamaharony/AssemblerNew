@@ -15,6 +15,7 @@ void copy_string(char *target, char *source) {
 	*target = '\0';
 }
 
+
 int main(int argc, char** argv) 
 {
 	//char* input = "C:\\Users\\Yotam\\Documents\\binom2.asm";
@@ -34,6 +35,7 @@ int main(int argc, char** argv)
 	readFile(input, output);
 	return 0;
 }
+
 
 List* get_labels_lines(char* filename, int* max_line) {
 	FILE *fp;
@@ -207,6 +209,8 @@ void readFile(char* input, char* output)
 	write_to_file(output, memin, max_line);
 	//scanf("%d", &i);
 	/* need to free the memory */
+	destroyArray(memin, max_line);
+	destroyList(labels);
 	fclose(fp);
 }
 
@@ -231,6 +235,16 @@ void write_to_file(char* filename, char** memin, int memin_len) {
 	}
 
 	fclose(fp);
+}
+
+void destroyArray(char** arr, int len)
+{
+	for (int i = 0; i < len;i++)
+	{
+		free(arr[i]);
+	}
+
+	free(arr);
 }
 
 char opcode_to_bin(char* opcode)

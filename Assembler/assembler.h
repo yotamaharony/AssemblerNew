@@ -58,6 +58,15 @@ int imm_to_int(char* str);
 */
 void write_to_file(char* path, char** arr, int arr_size);
 
+
+/*
+* This function free the array's memory
+* @param arr - the strings array
+* @param len - the array's length
+* @return - void
+*/
+void destroyArray(char** arr, int len);
+
 /*
 * This main function which runs the assembler program
 */
