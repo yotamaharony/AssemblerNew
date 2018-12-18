@@ -44,6 +44,7 @@ List* get_labels_lines(char* filename, int* max_line) {
 	char delimiters[] = " \t\r\n,";
 	int word_address;
 	List* labels = initList();
+	//Node* curr;
 
 	/* trying to open the file */
 	fp = fopen(filename, "r");
@@ -86,6 +87,8 @@ List* get_labels_lines(char* filename, int* max_line) {
 
 				if (word_address + 1 > (*max_line)) /* max_line = max(max_line, address of current of .word) */
 					(*max_line) = word_address + 1;
+
+				j--;
 			}
 
 			j++;
@@ -99,6 +102,15 @@ List* get_labels_lines(char* filename, int* max_line) {
 	{
 		(*max_line) = j;
 	}
+
+	/*
+	curr = labels->head;
+	while ( curr != NULL)
+	{
+		printf("name: %s\n", curr->label_name);
+		curr = curr->next;
+	}
+	*/
 
 	fclose(fp);
 	return labels;
@@ -163,21 +175,31 @@ void readFile(char* input, char* output)
 				comm[i] = strtok(NULL, delimiters);
 			}
 
-			/* check if the imm block it's a label - if it is, convert the label to the line in the code*/
-			int find = find_node(labels, comm[5]);
-			int c5 = 0;
-			if (find == -1) /* label was not found */
+			/* the command is .word*/
+			if (strchr(comm[0], '.'))
 			{
-				c5 = imm_to_int(comm[5]);
+				/* if hexa - convert to dec */
+				address = imm_to_int(comm[1]);
+				data = imm_to_int(comm[2]);
+				sprintf(memin[address], "%.8X", data);
+
+				j--;
 			}
 			else
-			{
-				c5 = find;
-			}
+			{/* if the command is not ".word"*/
 
-			/* if the command is not ".word"*/
-			if (!strchr(comm[0], '.'))
-			{
+			 /* check if the imm block it's a label - if it is, convert the label to the line in the code*/
+				int find = find_node(labels, comm[5]);
+				int c5 = 0;
+				if (find == -1) /* label was not found */
+				{
+					c5 = imm_to_int(comm[5]);
+				}
+				else
+				{
+					c5 = find;
+				}
+
 				//printf("LINE#%d: opcde=%s, rd=%s, rs=%s, rt=%s, rm=%s, imm=%s       ", j, comm[0], comm[1], comm[2], comm[3], comm[4], comm[5]);
 				opcode = opcode_to_bin(comm[0]);
 				rd = registerName_to_number(comm[1]);
@@ -187,16 +209,9 @@ void readFile(char* input, char* output)
 				//imm = comm[5];
 
 				char curr_instruction[9] = "00000000";
-				
+
 				sprintf(curr_instruction, "%c%c%c%c%c%.3X", opcode, rd, rs, rt, rm, c5);
 				copy_string(memin[j], curr_instruction);
-			}
-			else 
-			{ /* the command is .word*/
-				/* if hexa - convert to dec */
-				address = imm_to_int(comm[1]);
-				data = imm_to_int(comm[2]);
-				sprintf(memin[address], "%.8X", data);
 			}
 
 			j++;
@@ -217,11 +232,11 @@ void readFile(char* input, char* output)
 int imm_to_int(char* str) {
 	if (strstr(str, "0x") || strstr(str, "0X"))
 	{
-		return (int)strtol(str, NULL, 16);
+		return (int)strtol(str, NULL, 16) & 0xfff;
 	}
 	else
 	{
-		return (int)strtol(str, NULL, 10);
+		return (int)strtol(str, NULL, 10) & 0xfff;
 	}
 }
 

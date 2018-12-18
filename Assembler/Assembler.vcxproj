@@ -144,7 +144,6 @@
   <ItemGroup>
     <ClCompile Include="our_list.c" />
     <ClCompile Include="assembler.c" />
-    <ClCompile Include="Simulator.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="our_list.h" />
